@@ -1,48 +1,48 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
-
-	"github.com/gin-gonic/gin"
+	"regexp"
 )
 
 type controller struct {
-	sighup chan os.Signal
-	ct     string
+	ct         string
+	urlPattern string
+}
+
+func (c *controller) setDefault() {
+	c.ct = "application/vnd.kafka.avro.v2+json"
+	c.urlPattern = `^\d{3}-\d(-\d{3}-\d)?\.[a-z0-9-]+\.(db|cdc|cmd|sys|log|tmp)\.[a-z0-9-.]+\.\d+$`
+}
+
+func (c *controller) String() string {
+	return string(c.ct)
 }
 
 func NewController() *controller {
 	var cntr controller
-	cntr.sighup = make(chan os.Signal)
-	go cntr.sighupHandler()
-
 	return &cntr
 }
 
-func (p *controller) sighupHandler() {
-	for {
-		signal, ok := <-p.sighup
-		if ok {
-			log.Println("sighup", signal.String())
-		}
-	}
+func (c *controller) SighupHandler() {
+
+	log.Println("sighup")
 }
 
-func (p *controller) GetSighupChan() chan os.Signal {
-	return p.sighup
-}
-func (p *controller) SetCt(newCt string) {
-	p.ct = newCt
+func (c *controller) ValidateURL(url string) bool {
+	if matched, err := regexp.MatchString(c.urlPattern, url); err == nil {
+		return matched
+	}
+	return false
 }
 
-func (c *controller) AuthMiddleware(ctx *gin.Context) {
-	//Если content type = ct ->200 || 400
-	//или Request.Header.Get("Content-Type")
-	if ctx.ContentType() == c.ct {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Content Type is valid!"})
-		return
+func (c *controller) Validate(content, url string) (int, error) {
+	c.setDefault()
+	if content == c.ct && c.ValidateURL(url) {
+		return http.StatusOK, nil
 	}
-	ctx.JSON(http.StatusBadRequest, gin.H{"message": "Content Type is invalid!"})
+
+	return http.StatusBadRequest, fmt.Errorf("error in content %s or url %s", content, url)
 }
