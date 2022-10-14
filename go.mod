@@ -1,4 +1,4 @@
-module github.com/alpocketmonster/GoHttpServer
+module GoHttpServer
 
 go 1.19
 

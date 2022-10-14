@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/alpocketmonster/GoHttpServer/parser"
+	"GoHttpServer/parser"
+	"GoHttpServer/validator"
 )
 
 const ConfigPath = "./configs/config.yml"
@@ -14,10 +15,15 @@ const ConfigPath = "./configs/config.yml"
 type controller struct {
 	ct         []string
 	urlPattern string
+	validator  ValidatorInt
 }
 
 func (c *controller) String() string {
 	return fmt.Sprintf("Url %s and content %s", c.urlPattern, c.ct[0])
+}
+
+func (c *controller) GetValidator() ValidatorInt {
+	return c.validator
 }
 
 func (c *controller) SetDefault() {
@@ -39,12 +45,14 @@ func (c *controller) UpdateConfig() {
 
 	c.urlPattern = config.Auth.Urlvalidreg
 	c.ct = config.Auth.Contenttype
+	c.validator = validator.New("boom")
 	log.Println("updated config", c.ct)
 }
 
 func NewController() *controller {
 	var cntr controller
 	cntr.SetDefault()
+	cntr.validator = validator.New("owl")
 	return &cntr
 }
 
