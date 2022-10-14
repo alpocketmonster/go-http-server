@@ -5,30 +5,52 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+
+	"github.com/alpocketmonster/GoHttpServer/parser"
 )
 
+const ConfigPath = "./configs/config.yml"
+
 type controller struct {
-	ct         string
+	ct         []string
 	urlPattern string
 }
 
-func (c *controller) setDefault() {
-	c.ct = "application/vnd.kafka.avro.v2+json"
-	c.urlPattern = `^\d{3}-\d(-\d{3}-\d)?\.[a-z0-9-]+\.(db|cdc|cmd|sys|log|tmp)\.[a-z0-9-.]+\.\d+$`
+func (c *controller) String() string {
+	return fmt.Sprintf("Url %s and content %s", c.urlPattern, c.ct[0])
 }
 
-func (c *controller) String() string {
-	return string(c.ct)
+func (c *controller) SetDefault() {
+	config, err := parser.ParseConfig(ConfigPath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	c.urlPattern = config.Auth.Urlvalidreg
+	c.ct = config.Auth.Contenttype
+}
+
+func (c *controller) UpdateConfig() {
+	config, err := parser.ParseConfig(ConfigPath)
+	if err != nil {
+		log.Println("not updated config", c.ct)
+		return
+	}
+
+	c.urlPattern = config.Auth.Urlvalidreg
+	c.ct = config.Auth.Contenttype
+	log.Println("updated config", c.ct)
 }
 
 func NewController() *controller {
 	var cntr controller
+	cntr.SetDefault()
 	return &cntr
 }
 
 func (c *controller) SighupHandler() {
-
 	log.Println("sighup")
+	c.UpdateConfig()
 }
 
 func (c *controller) ValidateURL(url string) bool {
@@ -38,9 +60,17 @@ func (c *controller) ValidateURL(url string) bool {
 	return false
 }
 
+func (c *controller) ValidateContentType(content string) bool {
+	for _, ct := range c.ct {
+		if ct == content {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *controller) Validate(content, url string) (int, error) {
-	c.setDefault()
-	if content == c.ct && c.ValidateURL(url) {
+	if c.ValidateContentType(content) && c.ValidateURL(url) {
 		return http.StatusOK, nil
 	}
 
