@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,8 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alpocketmonster/GoHttpServer/controller"
-	"github.com/alpocketmonster/GoHttpServer/tools"
+	"GoHttpServer/controller"
+	"GoHttpServer/tools"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,16 +27,27 @@ func setupRouter() (*gin.Engine, SigHandler) {
 	controller := controller.NewController()
 
 	r.GET("/auth", func(ctx *gin.Context) {
-		//Если content type = ct ->200 || 400
+		// Если content type = ct ->200 || 400
 
 		code, err := controller.Validate(ctx.ContentType(), ctx.GetHeader("X-Original-Uri"))
 
 		switch code {
-		case http.StatusOK: //200
+		case http.StatusOK: // 200
 			ctx.JSON(http.StatusOK, gin.H{"message": "Request is valid!"})
-		case http.StatusBadRequest: //400
+		case http.StatusBadRequest: // 400
 			ctx.JSON(http.StatusBadRequest, gin.H{"message": string(err.Error())})
 		}
+	})
+	r.GET("/test", func(ctx *gin.Context) {
+		v := controller.GetValidator()
+		log.Println(v.GetRule())
+		time.Sleep(5 * time.Second)
+		log.Println(v.GetRule())
+		if v.IsValid(ctx.GetHeader("X-Message")) {
+			ctx.JSON(http.StatusOK, gin.H{"message": "Request is valid!"})
+			return
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Request is invalid!"})
 	})
 	return r, controller
 }
@@ -60,7 +73,7 @@ func main() {
 			logger.Errorln(fmt.Sprintf("listen failed: %s\n", err))
 			close(quit)
 		}
-		//time.Sleep(3 * time.Second)
+		// time.Sleep(3 * time.Second)
 		logger.Infoln("Server done")
 		logger.Infoln(controller.String())
 	}()
