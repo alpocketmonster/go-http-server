@@ -22,8 +22,8 @@ func (c *controller) String() string {
 	return fmt.Sprintf("Url %s and content %s", c.urlPattern, c.ct[0])
 }
 
-func (c *controller) GetValidator() *ValidatorInt {
-	return &c.validator
+func (c *controller) GetValidator() ValidatorInt {
+	return c.validator
 }
 
 func (c *controller) SetDefault() {
