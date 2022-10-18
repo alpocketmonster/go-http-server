@@ -40,10 +40,10 @@ func setupRouter() (*gin.Engine, SigHandler) {
 	})
 	r.GET("/test", func(ctx *gin.Context) {
 		v := controller.GetValidator()
-		log.Println(v.GetRule())
+		log.Println((*v).GetRule())
 		time.Sleep(5 * time.Second)
-		log.Println(v.GetRule())
-		if v.IsValid(ctx.GetHeader("X-Message")) {
+		log.Println((*v).GetRule())
+		if (*v).IsValid(ctx.GetHeader("X-Message")) {
 			ctx.JSON(http.StatusOK, gin.H{"message": "Request is valid!"})
 			return
 		}
