@@ -17,6 +17,3 @@ auth:
     - POST
     contenttype:
     - application/vnd.kafka.avro.v2+json
-
-
-Если X-Original-Uri совпадает с RE и content-type тоже совпадает
