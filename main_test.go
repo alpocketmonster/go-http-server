@@ -21,7 +21,7 @@ func TestHomepageHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func BenchmarkTestHomepageHandler(b *testing.B) {
+func BenchmarkHomepageHandler(b *testing.B) {
 	router, _ := setupRouter()
 	request, _ := http.NewRequest("GET", "/auth", nil)
 	request.Header.Set("Content-Type", "application/vnd.kafka.avro.v2+json")

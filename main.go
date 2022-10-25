@@ -23,7 +23,8 @@ type SigHandler interface {
 }
 
 func setupRouter() (*gin.Engine, SigHandler) {
-	r := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
 	controller := controller.NewController()
 
 	r.GET("/auth", func(ctx *gin.Context) {
